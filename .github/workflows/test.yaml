@@ -1,0 +1,65 @@
+name: Test
+
+on:
+  push:
+    branches:
+      - deprecate-circleci
+
+jobs:
+  static_code_analysis:
+    runs-on: ubuntu-20.04
+    name: Static Code Analysis
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.8"
+          cache: "pip"
+
+      - name: Install the CI requirements
+        shell: bash
+        run: |
+          pip install --requirement .circle/requirements-ci-ci.txt
+
+      - name: Clone StackStorm/lint-configs
+        shell: bash
+        run: |
+          git clone --depth 1 --single-branch --branch "${LINT_CONFIGS_BRANCH:-master}" \
+            https://github.com/StackStorm/lint-configs.git ~/ci/lint-configs
+
+      - name: Check YAML file syntax
+        shell: bash
+        run: |
+          find . \( -name '*.yml' \
+                -o -name '*.yml.sample' \
+                -o -name '*.yaml' \
+                -o -name '*.yaml.sample' \) \
+                -print | \
+          xargs -I "{}" python3 -c 'import yaml; yaml.safe_load(open("{}").read())'
+
+      - name: Check Bash file syntax
+        shell: bash
+        run: |
+          find . -name '*.sh' | xargs bash -n
+          grep -lrE '^#!/bin/bash' . | xargs bash -n
+
+      - name: Check Python files
+        shell: bash
+        run: |
+          echo ::group::flake8
+          flake8 --color always --benchmark --count --max-line-length 100 \
+            --config ~/ci/lint-configs/python/.flake8-exchange
+          echo ::endgroup::
+
+          echo ::group::pylint
+          find . -name '*.py' \
+            | xargs pylint --output-format colorized \
+              --rcfile ~/ci/lint-configs/python/.pylintrc-pack-ci
+          echo ::endgroup::
+
+      - name: Check Makefile syntax
+        run: |
+          find . -name Makefile | xargs make -n
