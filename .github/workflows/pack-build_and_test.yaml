@@ -67,7 +67,9 @@ jobs:
           force-check-all-files: ${{ inputs.force-check-all-files }}
 
       - name: Ensure CHANGES.md and pack.yaml changed (and Pack version increased)
-        uses: StackStorm-Exchange/ci/.github/actions/pack-meta@master
+        if: ${{ github.event_name == 'pull_request' }}
+        uses: mamercad/stackstorm-exchange-ci/ci/.github/actions/pack-meta@changelog-and-pack-checking-2
+        # uses: StackStorm-Exchange/ci/.github/actions/pack-meta@master
 
     services:
       mongo:
