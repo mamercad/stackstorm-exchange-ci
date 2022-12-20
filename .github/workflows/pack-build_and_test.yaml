@@ -68,7 +68,7 @@ jobs:
 
       - name: Ensure CHANGES.md and pack.yaml changed (and Pack version increased)
         if: ${{ github.event_name == 'pull_request' }}
-        uses: mamercad/stackstorm-exchange-ci/ci/.github/actions/pack-meta@changelog-and-pack-checking-2
+        uses: mamercad/stackstorm-exchange-ci/.github/actions/pack-meta@changelog-and-pack-checking-2
         # uses: StackStorm-Exchange/ci/.github/actions/pack-meta@master
 
     services:
